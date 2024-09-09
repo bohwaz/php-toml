@@ -1,12 +1,12 @@
 #!/usr/bin/env php
 <?php
 
-require 'src/Toml.php';
+require 'src/Toml/Toml.php';
 
 $data = file_get_contents('php://stdin');
 
 try {
-	$parsed = Toml::parse($data);
+	$parsed = Toml\Toml::parse($data);
 }
 catch (Exception $e) {
 	echo $e->getMessage() . PHP_EOL;

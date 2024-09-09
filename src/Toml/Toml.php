@@ -32,6 +32,8 @@
  *
  */
 
+namespace Toml;
+
 use DateTime;
 use Exception;
 use stdClass;
@@ -68,9 +70,9 @@ class Toml
     /**
      * Parses a TOML string to retrieve a hashed array of data.
      */
-    public static function parse(string $toml): array
+    public static function parse(string $toml): stdClass
     {
-        $result = new stdClass();
+        $result = new stdClass;
         $pointer = & $result;
 
         // Pre-compile
@@ -181,11 +183,11 @@ class Toml
                     if (is_array($pointer) && !isset($pointer[$tableName]) )
                     {
                         // Create table
-                        $pointer[$tableName] = new stdClass();
+                        $pointer[$tableName] = new stdClass;
                     }
                     elseif (is_object($pointer) && !isset( $pointer->$tableName ))
                     {
-                        $pointer->$tableName = new stdClass();
+                        $pointer->$tableName = new stdClass;
                     }
                     elseif ($i == $last)
                     {
@@ -690,7 +692,7 @@ class Toml
             throw new Exception('Invalid inline table definition: ' . $val);
         }
 
-        $result = new stdClass();
+        $result = new stdClass;
         $openString = false;
         $openLString = false;
         $openBrackets = 0;
@@ -777,12 +779,12 @@ class Toml
             if ($key[$i] === "." && !$openQuote && !$openDoubleQuote) {
                 if (is_array($pointer)) {
                     if (!isset($pointer[$buff])) {
-                        $pointer[$buff] = new stdClass();
+                        $pointer[$buff] = new stdClass;
                     }
                     $pointer = & $pointer[$buff];
                 } else {
                     if (!isset($pointer->{$buff})) {
-                        $pointer->{$buff} = new stdClass();
+                        $pointer->{$buff} = new stdClass;
                     }
                     $pointer = & $pointer->{$buff};
                 }

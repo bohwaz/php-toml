@@ -1,5 +1,5 @@
 {
-	"name" : "leonelquinteros/php-toml",
+	"name" : "bohwaz/php-toml",
 	"description" : "PHP parser for TOML language ( https://github.com/toml-lang/toml )",
 	"require" : {
 		"php" : ">=8.0"
@@ -12,25 +12,18 @@
 		"library",
 		"lib",
 		"class",
-		"package",
-		"mojombo",
-		"leonelquinteros"
+		"package"
 	],
 	"homepage" : "http://github.com/leonelquinteros/php-toml",
 	"license" : "BSD-3-Clause-Clear",
 	"authors" : [{
 			"name" : "Leonel Quinteros",
-			"email" : "leonel.quinteros@gmail.com",
 			"role" : "Author"
 		}
 	],
 	"autoload": {
 		"classmap": [
-			"./src/Toml.php"
+			"./src/Toml/Toml.php"
 		]
-	},
-	"support" : {
-		"issues" : "https://github.com/leonelquinteros/php-toml/issues",
-		"source" : "https://github.com/leonelquinteros/php-toml"
 	}
 }

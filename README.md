@@ -1,9 +1,3 @@
-[![Packagist](https://img.shields.io/packagist/v/leonelquinteros/php-toml.svg)](https://packagist.org/packages/leonelquinteros/php-toml)
-[![Packagist](https://img.shields.io/packagist/l/leonelquinteros/php-toml.svg)](https://packagist.org/packages/leonelquinteros/php-toml)
-[![Build Status](https://travis-ci.org/leonelquinteros/php-toml.svg?branch=master)](https://travis-ci.org/leonelquinteros/php-toml)
-[![Packagist](https://img.shields.io/packagist/dt/leonelquinteros/php-toml.svg)](https://packagist.org/packages/leonelquinteros/php-toml)
-
-
 PHP TOML parser
 ===============
 
@@ -13,13 +7,13 @@ PHP parser for TOML language ( https://github.com/toml-lang/toml )
 Support
 -------
 
-TOML version: [v0.4.0](https://github.com/mojombo/toml/blob/master/versions/en/toml-v0.4.0.md)
+TOML version: [v0.4.0](https://toml.io/en/v0.4.0)
 
 
 Requirements
 ------------
 
-- PHP 5.2+
+- PHP 8.0+
 
 
 Installation

@@ -1,6 +1,7 @@
 <?php
 /*
  * @Copyright (c) 2013 Leonel Quinteros
+ * @Copyright (c) 2024 BohwaZ
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,8 +32,12 @@
  *
  */
 
+use DateTime;
+use Exception;
+use stdClass;
+
 /**
- * PHP parser for TOML language: https://github.com/mojombo/toml
+ * PHP parser for TOML language: https://github.com/toml-lang/toml
  *
  * @author Leonel Quinteros https://github.com/leonelquinteros
  *
@@ -43,14 +48,10 @@ class Toml
 {
     /**
      * Reads string from specified file path and parses it as TOML.
-     *
-     * @param (string) File path
-     *
-     * @return (array) Toml::parse() result
      */
-    public static function parseFile($path)
+    public static function parseFile(string $path): array
     {
-        if(!is_file($path))
+        if (!is_file($path))
         {
             throw new Exception('Invalid file path');
         }
@@ -66,12 +67,8 @@ class Toml
 
     /**
      * Parses a TOML string to retrieve a hashed array of data.
-     *
-     * @param (string) $toml TOML formatted string
-     *
-     * @return (array) Parsed TOML file into array.
      */
-    public static function parse($toml)
+    public static function parse(string $toml): array
     {
         $result = new stdClass();
         $pointer = & $result;
@@ -81,18 +78,18 @@ class Toml
 
         // Split lines
         $aToml = explode("\n", $toml);
-        for($ln = 0; $ln < count($aToml); $ln++)
+        for ($ln = 0; $ln < count($aToml); $ln++)
         {
             $line = trim($aToml[$ln]);
 
             // Skip commented and empty lines
-            if(empty($line) || $line[0] == '#')
+            if (empty($line) || $line[0] === '#')
             {
                 continue;
             }
 
             // Array of Tables
-            if(substr($line, 0, 2) == '[[' && substr($line, -2) == ']]')
+            if (substr($line, 0, 2) === '[[' && substr($line, -2) === ']]')
             {
                 // Set pointer at top level.
                 $pointer = & $result;
@@ -105,40 +102,40 @@ class Toml
                 {
                     $tableName = trim($tableName);
 
-                    if($tableName == "")
+                    if ($tableName === "")
                     {
                         // Empty table name
                         throw new Exception("Empty table keys aren't allowed");
                     }
 
                     // Allow quoted table names
-                    if($tableName[0] == '"' && substr($tableName,-1) == '"')
+                    if ($tableName[0] === '"' && substr($tableName,-1) === '"')
                     {
                         $tableName = json_decode($tableName);
                     }
-                    elseif(!ctype_alnum(str_replace(array('-', '_', '.'), '', $tableName))) // Check for proper keys
+                    elseif (!ctype_alnum(str_replace(array('-', '_', '.'), '', $tableName))) // Check for proper keys
                     {
                         // Invalid table name
                         throw new Exception("Invalid table name: " . $tableName);
                     }
 
                     // Create array of tables and move pointer forward
-                    if( is_array($pointer) && !isset($pointer[$tableName]) )
+                    if (is_array($pointer) && !isset($pointer[$tableName]) )
                     {
                         $pointer[$tableName] = array();
                     }
-                    elseif(is_object($pointer) && !isset( $pointer->$tableName ))
+                    elseif (is_object($pointer) && !isset( $pointer->$tableName ))
                     {
                         $pointer->$tableName = array();
                     }
-                    if(is_array($pointer)) {
+                    if (is_array($pointer)) {
                         $pointer = & $pointer[$tableName];
                     } else {
                         $pointer = & $pointer->$tableName;
                     }
 
                     // Handle array of tables
-                    if($i < $last && is_array($pointer)) {
+                    if ($i < $last && is_array($pointer)) {
                         end($pointer);
                         $pointer = & $pointer[key($pointer)];
                     }
@@ -150,7 +147,7 @@ class Toml
                 $pointer =  & $pointer[key($pointer)];
             }
             // Single Tables
-            elseif($line[0] == '[' && substr($line, -1) == ']')
+            elseif ($line[0] === '[' && substr($line, -1) === ']')
             {
                 // Set pointer at first level.
                 $pointer = & $result;
@@ -164,64 +161,64 @@ class Toml
 
                 foreach($aTable as $i => $tableName)
                 {
-                    if($tableName == "")
+                    if ($tableName === "")
                     {
                         // Empty table name
                         throw new Exception("Empty table keys aren't allowed on line " . $line);
                     }
 
                     // Allow quoted table names
-                    if(($tableName[0] == '"' && substr($tableName,-1) == '"') || ($tableName[0] == "'" && substr($tableName,-1) == "'"))
+                    if (($tableName[0] === '"' && substr($tableName,-1) === '"') || ($tableName[0] === "'" && substr($tableName,-1) === "'"))
                     {
                         $tableName = json_decode($tableName);
                     }
-                    elseif(!ctype_alnum(str_replace(array('-', '_', '.'), '', $tableName))) // Check for proper keys
+                    elseif (!ctype_alnum(str_replace(array('-', '_', '.'), '', $tableName))) // Check for proper keys
                     {
                         // Invalid table name
                         throw new Exception("Invalid table name: " . $tableName);
                     }
 
-                    if( is_array($pointer) && !isset($pointer[$tableName]) )
+                    if (is_array($pointer) && !isset($pointer[$tableName]) )
                     {
                         // Create table
                         $pointer[$tableName] = new stdClass();
                     }
-                    elseif(is_object($pointer) && !isset( $pointer->$tableName ))
+                    elseif (is_object($pointer) && !isset( $pointer->$tableName ))
                     {
                         $pointer->$tableName = new stdClass();
                     }
-                    elseif($i == $last)
+                    elseif ($i == $last)
                     {
                         // Overwrite key
                         throw new Exception('Key overwrite previous keys: ' . $line);
                     }
 
                     // Move pointer forward
-                    if( is_array($pointer) ) {
+                    if (is_array($pointer) ) {
                         $pointer = & $pointer[$tableName];
                     } else {
                         $pointer = & $pointer->$tableName;
                     }
 
                     // Handle array of tables
-                    if(is_array($pointer)) {
+                    if (is_array($pointer)) {
                         end($pointer);
                         $pointer = & $pointer[key($pointer)];
                     }
                 }
             }
             // Key = Values
-            elseif(strpos($line, '='))
+            elseif (strpos($line, '='))
             {
                 $kv = explode('=', $line, 2);
 
-                if(is_object($pointer) && !isset( $pointer->{trim($kv[0])} )
+                if (is_object($pointer) && !isset( $pointer->{trim($kv[0])} )
                     || is_array($pointer) && !isset( $pointer[trim($kv[0])] )
                 ) {
                     // Multi-line strings
-                    if(substr(trim($kv[1]), 0, 3) == '"""')
+                    if (substr(trim($kv[1]), 0, 3) === '"""')
                     {
-                        if(strlen(trim($kv[1])) > 3 && substr(trim($kv[1]), -3) != '"""' || strlen(trim($kv[1])) == 3)
+                        if (strlen(trim($kv[1])) > 3 && substr(trim($kv[1]), -3) !== '"""' || strlen(trim($kv[1])) == 3)
                         {
                             do
                             {
@@ -233,9 +230,9 @@ class Toml
                     }
 
                     // Multi-line literal strings
-                    if(substr(trim($kv[1]), 0, 3) == "'''")
+                    if (substr(trim($kv[1]), 0, 3) === "'''")
                     {
-                        if(strlen(trim($kv[1])) > 3 && substr(trim($kv[1]), -3) != "'''" || strlen(trim($kv[1])) == 3)
+                        if (strlen(trim($kv[1])) > 3 && substr(trim($kv[1]), -3) !== "'''" || strlen(trim($kv[1])) == 3)
                         {
                             do
                             {
@@ -254,7 +251,7 @@ class Toml
                     throw new Exception('Key overwrite previous keys: ' . $line);
                 }
             }
-            elseif($line[0] == '[' && substr($line, -1) != ']')
+            elseif ($line[0] === '[' && substr($line, -1) !== ']')
             {
                 throw new Exception('Key groups have to be on a line by themselves: ' . $line);
             }
@@ -271,12 +268,8 @@ class Toml
     /**
      * Performs text modifications in order to normalize the TOML file for the parser.
      * Kind of pre-compiler.
-     *
-     * @param (string) $toml TOML string.
-     *
-     * @return (string) Normalized TOML string
      */
-    private static function normalize($toml)
+    private static function normalize(string $toml): string
     {
         // Cleanup EOL chars.
         $toml = str_replace(array("\r\n", "\n\r"), "\n", $toml);
@@ -295,29 +288,29 @@ class Toml
         $lineBuffer     = '';
 
         $strLen = strlen($toml);
-        for($i = 0; $i < $strLen; $i++)
+        for ($i = 0; $i < $strLen; $i++)
         {
             $keep = true;
 
-            if($toml[$i] == '[' && !$openString && !$openLString && !$openMString && !$openMLString)
+            if ($toml[$i] === '[' && !$openString && !$openLString && !$openMString && !$openMLString)
             {
                 // Keygroup or array definition start outside a string
                 $openBrackets++;
 
                 // Keygroup
-                if($openBrackets == 1 && trim($lineBuffer) == '')
+                if ($openBrackets == 1 && trim($lineBuffer) === '')
                 {
                     $openKeygroup = true;
                 }
             }
-            elseif($toml[$i] == ']' && !$openString && !$openLString && !$openMString && !$openMLString)
+            elseif ($toml[$i] === ']' && !$openString && !$openLString && !$openMString && !$openMLString)
             {
                 // Keygroup or array definition end outside a string
-                if($openBrackets > 0)
+                if ($openBrackets > 0)
                 {
                     $openBrackets--;
 
-                    if($openKeygroup)
+                    if ($openKeygroup)
                     {
                         $openKeygroup = false;
                     }
@@ -327,10 +320,10 @@ class Toml
                     throw new Exception("Unexpected ']' on: " . $lineBuffer);
                 }
             }
-            elseif($openBrackets > 0 && $toml[$i] == "\n")
+            elseif ($openBrackets > 0 && $toml[$i] === "\n")
             {
                 // Multi-line keygroup definition is not alowed.
-                if($openKeygroup)
+                if ($openKeygroup)
                 {
                     throw new Exception('Multi-line keygroup definition is not allowed on: ' . $lineBuffer);
                 }
@@ -338,15 +331,15 @@ class Toml
                 // EOLs inside array definition. We don't want them.
                 $keep = false;
             }
-            elseif(($openString || $openLString) && $toml[$i] == "\n")
+            elseif (($openString || $openLString) && $toml[$i] === "\n")
             {
                 // EOLs inside string should throw error.
                 throw new Exception("Multi-line string not allowed on: " . $lineBuffer);
             }
-            elseif($toml[$i] == '"' && $toml[$i - 1] != "\\" && !$openLString && !$openMLString) // String handling, allow escaped quotes.
+            elseif ($toml[$i] === '"' && $toml[$i - 1] !== "\\" && !$openLString && !$openMLString) // String handling, allow escaped quotes.
             {
                 // Check multi-line strings
-                if(substr($toml, $i, 3) == '"""')
+                if (substr($toml, $i, 3) === '"""')
                 {
                     // Include the token inmediately.
                     $i += 2;
@@ -356,15 +349,15 @@ class Toml
 
                     $openMString = !$openMString;
                 }
-                elseif(!$openMString) // Simple strings
+                elseif (!$openMString) // Simple strings
                 {
                     $openString = !$openString;
                 }
             }
-            elseif($toml[$i] == "'" && !$openString && !$openMString) // Literal string handling.
+            elseif ($toml[$i] === "'" && !$openString && !$openMString) // Literal string handling.
             {
                 // Check multi-line strings
-                if(substr($toml, $i, 3) == "'''")
+                if (substr($toml, $i, 3) === "'''")
                 {
                     // Include the token inmediately.
                     $i += 2;
@@ -374,33 +367,33 @@ class Toml
 
                     $openMLString = !$openMLString;
                 }
-                elseif(!$openMLString) // Simple strings
+                elseif (!$openMLString) // Simple strings
                 {
                     $openLString = !$openLString;
                 }
             }
-            elseif($toml[$i] == "\\" && $toml[$i-1] != "\\" && !in_array($toml[$i+1], array('b', 't', 'n', 'f', 'r', 'u', 'U', '"', "\\", ' ')))
+            elseif ($toml[$i] === "\\" && $toml[$i-1] !== "\\" && !in_array($toml[$i+1], array('b', 't', 'n', 'f', 'r', 'u', 'U', '"', "\\", ' ')))
             {
                 // Reserved special characters inside strings should produce error
-                if($openString)
+                if ($openString)
                 {
                 	throw new Exception('Reserved special characters inside strings are not allowed: ' . $toml[$i] . $toml[$i+1]);
                 }
 
                 // Cleanup escaped new lines and whitespaces from multi-line strings
-                if($openMString)
+                if ($openMString)
                 {
-                    while($toml[$i+1] == "\n" || $toml[$i+1] == " ")
+                    while($toml[$i+1] === "\n" || $toml[$i+1] === " ")
                     {
                         $i++;
                         $keep = false;
                     }
                 }
             }
-            elseif($toml[$i] == '#' && !$openString && !$openKeygroup)
+            elseif ($toml[$i] === '#' && !$openString && !$openKeygroup)
             {
                 // Remove comments only at the end of the line. Doesn't catch comments inside array definition.
-                while(isset($toml[$i]) && $toml[$i] != "\n")
+                while(isset($toml[$i]) && $toml[$i] !== "\n")
                 {
                     $i++;
                 }
@@ -410,14 +403,14 @@ class Toml
             }
 
             // Raw Lines
-            if(isset($toml[$i])) {
+            if (isset($toml[$i])) {
                 $lineBuffer .= $toml[$i];
-                if($toml[$i] == "\n")
+                if ($toml[$i] === "\n")
                 {
                     $lineBuffer = '';
                 }
 
-                if($keep)
+                if ($keep)
                 {
                     $normalized .= $toml[$i];
                 }
@@ -425,27 +418,27 @@ class Toml
         }
 
         // Something went wrong.
-        if($openBrackets)
+        if ($openBrackets)
         {
             throw new Exception('Syntax error found on TOML document. Missing closing bracket.');
         }
-        if($openString)
+        if ($openString)
         {
             throw new Exception('Syntax error found on TOML document. Missing closing string delimiter.');
         }
-        if($openMString)
+        if ($openMString)
         {
             throw new Exception('Syntax error found on TOML document. Missing closing multi-line string delimiter.');
         }
-        if($openLString)
+        if ($openLString)
         {
             throw new Exception('Syntax error found on TOML document. Missing closing literal string delimiter.');
         }
-        if($openMLString)
+        if ($openMLString)
         {
             throw new Exception('Syntax error found on TOML document. Missing closing multi-line literal string delimiter.');
         }
-        if($openKeygroup)
+        if ($openKeygroup)
         {
             throw new Exception('Syntax error found on TOML document. Missing closing key group delimiter.');
         }
@@ -456,12 +449,8 @@ class Toml
 
     /**
      * Parses TOML table names and returns the hierarchy array of table names.
-     *
-     * @param (string) $name
-     *
-     * @return (array) Table names
      */
-    private static function parseTableName($name)
+    private static function parseTableName(string $name): array
     {
         // Init buffer
         $buffer = '';
@@ -469,17 +458,17 @@ class Toml
         $names = array();
 
         $strLen = strlen($name);
-        for($i = 0; $i < $strLen; $i++)
+        for ($i = 0; $i < $strLen; $i++)
         {
-            if($name[$i] == '"')
+            if ($name[$i] === '"')
             {
                 // Toggle strings
-                if( !$strOpen || ($strOpen && $name[$i - 1] != "\\") )
+                if ( !$strOpen || ($strOpen && $name[$i - 1] !== "\\") )
                 {
                     $strOpen = !$strOpen;
                 }
             }
-            elseif($name[$i] == '.' && !$strOpen)
+            elseif ($name[$i] === '.' && !$strOpen)
             {
                 // Save and cleanup buffer. Continue.
                 $names[] = $buffer;
@@ -492,7 +481,7 @@ class Toml
         }
 
         // Save last buffer
-        if($buffer != '') {
+        if ($buffer !== '') {
             $names[] = $buffer;
         }
 
@@ -501,44 +490,40 @@ class Toml
 
     /**
      * Parses TOML value and returns it to be assigned on the hashed array
-     *
-     * @param (string) $val
-     *
-     * @return (mixed) Parsed value.
      */
-    private static function parseValue($val)
+    private static function parseValue(string $val): mixed
     {
         $parsedVal = null;
 
         // Cleanup
         $val = trim($val);
 
-        if($val === '')
+        if ($val === '')
         {
             throw new Exception('Empty value not allowed');
         }
 
         // Boolean
-        if($val == 'true' || $val == 'false')
+        if ($val === 'true' || $val === 'false')
         {
-            $parsedVal = ($val == 'true');
+            $parsedVal = ($val === 'true');
         }
         // Literal multi-line string
-        elseif(substr($val, 0, 3) == "'''" && substr($val, -3) == "'''")
+        elseif (substr($val, 0, 3) === "'''" && substr($val, -3) === "'''")
         {
             $parsedVal = substr($val, 3, -3);
 
             // Trim first newline on multi-line string definition
-            if($parsedVal[0] == "\n")
+            if ($parsedVal[0] === "\n")
             {
                 $parsedVal = substr($parsedVal, 1);
             }
         }
         // Literal string
-        elseif($val[0] == "'" && substr($val, -1) == "'")
+        elseif ($val[0] === "'" && substr($val, -1) === "'")
         {
             // No newlines allowed
-            if(strpos($val, "\n") !== false)
+            if (strpos($val, "\n") !== false)
             {
                 throw new Exception('New lines not allowed on single line string literals.');
             }
@@ -546,12 +531,12 @@ class Toml
             $parsedVal = substr($val, 1, -1);
         }
         // Multi-line string
-        elseif(substr($val, 0, 3) == '"""' && substr($val, -3) == '"""')
+        elseif (substr($val, 0, 3) === '"""' && substr($val, -3) === '"""')
         {
             $parsedVal = substr($val, 3, -3);
 
             // Trim first newline on multi-line string definition
-            if($parsedVal[0] == "\n")
+            if ($parsedVal[0] === "\n")
             {
                 $parsedVal = substr($parsedVal, 1);
             }
@@ -560,18 +545,18 @@ class Toml
             $parsedVal = json_decode('"' . str_replace("\n", '\n', $parsedVal) . '"');
         }
         // String
-        elseif($val[0] == '"' && substr($val, -1) == '"')
+        elseif ($val[0] === '"' && substr($val, -1) === '"')
         {
             // TOML's specification says it's the same as for JSON format... so
             $parsedVal = json_decode($val);
         }
         // Numbers
-        elseif(is_numeric(str_replace('_', '', $val)))
+        elseif (is_numeric(str_replace('_', '', $val)))
         {
             $val = str_replace('_', '', $val);
 
             $intVal = filter_var($val, FILTER_VALIDATE_INT);
-            if($intVal !== false)
+            if ($intVal !== false)
             {
                 $parsedVal = $intVal;
             }
@@ -581,17 +566,17 @@ class Toml
             }
         }
         // Datetime. Parsed to UNIX time value.
-        elseif(self::isISODate($val))
+        elseif (self::isISODate($val))
         {
             $parsedVal = new DateTime($val);
         }
         // Single line array (normalized)
-        elseif($val[0] == '[' && substr($val, -1) == ']')
+        elseif ($val[0] === '[' && substr($val, -1) === ']')
         {
             $parsedVal = self::parseArray($val);
         }
         // Inline table (normalized)
-        elseif($val[0] == '{' && substr($val, -1) == '}')
+        elseif ($val[0] === '{' && substr($val, -1) === '}')
         {
             $parsedVal = self::parseInlineTable($val);
         }
@@ -606,12 +591,8 @@ class Toml
 
     /**
      * Recursion function to parse all array values through self::parseValue()
-     *
-     * @param (array) $array
-     *
-     * @return (array) Parsed array.
      */
-    private static function parseArray($val)
+    private static function parseArray(array $val): array
     {
         $result = array();
         $openBrackets = 0;
@@ -621,26 +602,26 @@ class Toml
         $buffer = '';
 
         $strLen = strlen($val);
-        for($i = 0; $i < $strLen; $i++)
+        for ($i = 0; $i < $strLen; $i++)
         {
-            if($val[$i] == '[' && !$openString && !$openLString)
+            if ($val[$i] === '[' && !$openString && !$openLString)
             {
                 $openBrackets++;
 
-                if($openBrackets == 1)
+                if ($openBrackets == 1)
                 {
                     // Skip first and last brackets.
                     continue;
                 }
             }
-            elseif($val[$i] == ']' && !$openString && !$openLString)
+            elseif ($val[$i] === ']' && !$openString && !$openLString)
             {
                 $openBrackets--;
 
-                if($openBrackets == 0)
+                if ($openBrackets == 0)
                 {
                     // Allow terminating commas before the closing bracket
-                    if(trim($buffer) != '')
+                    if (trim($buffer) !== '')
                     {
                         $result[] = self::parseValue( trim($buffer) );
                     }
@@ -653,23 +634,23 @@ class Toml
                     return $result;
                 }
             }
-            elseif($val[$i] == '"' && $val[$i - 1] != "\\" && !$openLString)
+            elseif ($val[$i] === '"' && $val[$i - 1] !== "\\" && !$openLString)
             {
                 $openString = !$openString;
             }
-            elseif($val[$i] == "'"  && !$openString) {
+            elseif ($val[$i] === "'"  && !$openString) {
                 $openLString = !$openLString;
             }
-            elseif($val[$i] == "{" && !$openString && !$openLString) {
+            elseif ($val[$i] === "{" && !$openString && !$openLString) {
                 $openCurlyBraces++;
             }
-            elseif($val[$i] == "}" && !$openString && !$openLString) {
+            elseif ($val[$i] === "}" && !$openString && !$openLString) {
                 $openCurlyBraces--;
             }
-            
-            if( ($val[$i] == ',' || $val[$i] == '}') && !$openString && !$openLString && $openBrackets == 1 && $openCurlyBraces == 0)
+
+            if ( ($val[$i] === ',' || $val[$i] === '}') && !$openString && !$openLString && $openBrackets == 1 && $openCurlyBraces == 0)
             {
-                if ($val[$i] == '}') {
+                if ($val[$i] === '}') {
                     $buffer .= $val[$i];
                 }
 
@@ -697,10 +678,10 @@ class Toml
     /**
      * Parse inline tables into common table array
      */
-    private static function parseInlineTable($val)
+    private static function parseInlineTable(string $val): stdClass
     {
         // Check valid inline table
-        if($val[0] == '{' && substr($val, -1) == '}')
+        if ($val[0] === '{' && substr($val, -1) === '}')
         {
             $val = substr($val, 1, -1);
         }
@@ -716,24 +697,24 @@ class Toml
         $buffer = '';
 
         $strLen = strlen($val);
-        for($i = 0; $i < $strLen; $i++)
+        for ($i = 0; $i < $strLen; $i++)
         {
             // Handle strings
-            if($val[$i] == '"' && $val[$i - 1] != "\\")
+            if ($val[$i] === '"' && $val[$i - 1] !== "\\")
             {
                 $openString = !$openString;
             }
-            elseif($val[$i] == "'") {
+            elseif ($val[$i] === "'") {
                 $openLString = !$openLString;
             }
-            elseif($val[$i] == "[" && !$openString && !$openLString) {
+            elseif ($val[$i] === "[" && !$openString && !$openLString) {
                 $openBrackets++;
             }
-            elseif($val[$i] == "]" && !$openString && !$openLString) {
+            elseif ($val[$i] === "]" && !$openString && !$openLString) {
                 $openBrackets--;
             }
 
-            if( $val[$i] == ',' && !$openString && !$openLString && $openBrackets == 0)
+            if ( $val[$i] === ',' && !$openString && !$openLString && $openBrackets == 0)
             {
                 // Parse buffer
                 $kv = explode('=', $buffer, 2);
@@ -758,11 +739,8 @@ class Toml
     /**
      * Function that takes a key expression and the current pointer to position in the right hierarchy.
      * Then it sets the corresponding value on that position.
-     *
-     * @param  (string) $key
-     * @param  (&) $pointer
      */
-    private static function parseKeyValue($key, $val, & $pointer) 
+    private static function parseKeyValue(string $key, $val, &$pointer): string
     {
         // Flags
         $openQuote = false;
@@ -772,11 +750,11 @@ class Toml
         $buff = '';
 
         // Parse
-        for($i = 0; $i < strlen($key); $i++) {
+        for ($i = 0; $i < strlen($key); $i++) {
             // Handle quoting
-            if($key[$i] == '"') {
-                if(!$openQuote) {
-                    if($openDoubleQuote) {
+            if ($key[$i] === '"') {
+                if (!$openQuote) {
+                    if ($openDoubleQuote) {
                         $openDoubleQuote = false;
                     } else {
                         $openDoubleQuote = true;
@@ -784,9 +762,9 @@ class Toml
                     continue;
                 }
             }
-            if($key[$i] == "'") {
-                if(!$openDoubleQuote) {
-                    if($openQuote) {
+            if ($key[$i] === "'") {
+                if (!$openDoubleQuote) {
+                    if ($openQuote) {
                         $openQuote = false;
                     } else {
                         $openQuote = true;
@@ -796,14 +774,14 @@ class Toml
             }
 
             // Handle dotted keys
-            if($key[$i] == "." && !$openQuote && !$openDoubleQuote) {
-                if(is_array($pointer)) {
-                    if(!isset($pointer[$buff])) {
+            if ($key[$i] === "." && !$openQuote && !$openDoubleQuote) {
+                if (is_array($pointer)) {
+                    if (!isset($pointer[$buff])) {
                         $pointer[$buff] = new stdClass();
                     }
                     $pointer = & $pointer[$buff];
                 } else {
-                    if(!isset($pointer->{$buff})) {
+                    if (!isset($pointer->{$buff})) {
                         $pointer->{$buff} = new stdClass();
                     }
                     $pointer = & $pointer->{$buff};
@@ -817,7 +795,7 @@ class Toml
             $buff .= $key[$i];
         }
 
-        if(is_array($pointer)) {
+        if (is_array($pointer)) {
             $pointer[$buff] = self::parseValue( $val );
         } else {
             $pointer->{$buff} = self::parseValue( $val );
@@ -829,14 +807,10 @@ class Toml
     /**
      * Function that checks the data type of the first and last elements of an array,
      * and returns false if they don't match
-     *
-     * @param  (array) $array
-     *
-     * @return boolean
      */
-    private static function checkDataType($array)
+    private static function checkDataType(array $array): bool
     {
-        if(count($array) <= 1)
+        if (count($array) <= 1)
         {
             return true;
         }
@@ -857,11 +831,8 @@ class Toml
 
     /**
      * Returns the data type of a variable
-     *
-     * @param  (mixed) $val
-     * @return (string) Data type of value
      */
-    private static function getCustomDataType($val)
+    private static function getCustomDataType(mixed $val): string
     {
         if (!is_array($val))
         {
@@ -877,13 +848,10 @@ class Toml
 
     /**
      * Return whether the given value is a valid ISODate
-     *
-     * @param  (string)  $val
-     * @return boolean
      */
-    public static function isISODate($val)
+    public static function isISODate(string $val): bool
     {
-        if(!is_string($val)) {
+        if (!is_string($val)) {
             return false;
         }
 
@@ -892,7 +860,7 @@ class Toml
         {
             $date = new DateTime($val);
         }
-        catch(Exception $e)
+        catch (Exception $e)
         {
             return false;
         }

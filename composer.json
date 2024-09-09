@@ -2,7 +2,7 @@
 	"name" : "leonelquinteros/php-toml",
 	"description" : "PHP parser for TOML language ( https://github.com/toml-lang/toml )",
 	"require" : {
-		"php" : ">=5.2.0"
+		"php" : ">=8.0"
 	},
 	"type" : "library",
 	"keywords" : [
